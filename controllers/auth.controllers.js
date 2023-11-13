@@ -3,6 +3,8 @@ const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET_KEY } = process.env;
+const axios = require('axios');
+const Sentry = require('@sentry/node')
 
 module.exports = {
     register: async (req, res, next) => {
@@ -85,12 +87,30 @@ module.exports = {
         }
     },
 
-    whoami: (req, res, next) => {
-        return res.status(200).json({
-            status: true,
-            message: 'OK',
-            err: null,
-            data: { user: req.user }
-        });
+    whoami: async (req, res, next) => {
+        try {
+            let { postId } = req.query;
+            axios.get(`https://jsonplaceholder.typicode.com/posts/${postId}`)
+            .then(({ data }) => {
+                return res.status(200).json({
+                    status: true,
+                    message: 'OK',
+                    err: null,
+                    data: { user: req.user, data }
+                });
+            })
+            .catch( err => {
+                Sentry.captureException(err);
+                return res.status(400).json({
+                    status: false,
+                    message: 'not found',
+                    err: err.message,
+                    data: null
+                });
+            })
+        } catch (err) {
+            next(err);
+        }
+        
     }
 };
