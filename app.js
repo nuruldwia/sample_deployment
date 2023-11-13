@@ -47,7 +47,7 @@ app.use(Sentry.Handlers.errorHandler());
 
 //404
 app.use((req, res, next) => {
-    return res.status(404).json({
+    res.status(404).json({
         status: false,
         message: 'Not Found!',
         error: null,
@@ -57,11 +57,11 @@ app.use((req, res, next) => {
 
 
 //500
-app.use((req, res, next) => {
-    return res.status(500).json({
+app.use((err, req, res, next) => {
+    res.status(500).json({
         status: false,
         message: 'Internal Message Error!',
-        error: error.message,
+        error: err.message,
         data: {
             env: RAILWAY_ENVIRONMENT_NAME
         }
