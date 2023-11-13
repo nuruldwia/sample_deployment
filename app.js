@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
-const { PORT, SENTRY_DSN, ENV } = process.env;
+const { PORT, SENTRY_DSN, RAILWAY_ENVIRONMENT_NAME } = process.env;
 const Sentry = require('@sentry/node');
 
 Sentry.init({
@@ -15,7 +15,7 @@ Sentry.init({
     ],
     // Performance Monitoring
     tracesSampleRate: 1.0,
-    environment: ENV
+    environment: RAILWAY_ENVIRONMENT_NAME
 })
 
 app.use(morgan('dev'));
@@ -33,7 +33,9 @@ app.get('/', (req, res) => {
         status: true,
         message: 'Hello World!',
         err: null,
-        data: null
+        data: {
+            env: RAILWAY_ENVIRONMENT_NAME
+        }
     })
 })
 
@@ -43,6 +45,7 @@ app.use('/api/v1/auth', authRouter);
 // The error handler must be registered before any other error middleware and after all controllers
 app.use(Sentry.Handlers.errorHandler());
 
+//404
 app.use((req, res, next) => {
     return res.status(404).json({
         status: false,
@@ -52,12 +55,16 @@ app.use((req, res, next) => {
     });
 });
 
+
+//500
 app.use((req, res, next) => {
     return res.status(500).json({
         status: false,
         message: 'Internal Message Error!',
         error: error.message,
-        data: null
+        data: {
+            env: RAILWAY_ENVIRONMENT_NAME
+        }
     });
 });
 
